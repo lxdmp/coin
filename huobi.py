@@ -1,5 +1,6 @@
 # coding=utf-8
 
+import math
 import json
 from huobi import scene
 from huobi import wallet
@@ -51,12 +52,29 @@ def do_work(filename):
 		ma_m = [scene.indicator('ma_m')[-2][1], scene.indicator('ma_m')[-1][1]]
 		ma_l = [scene.indicator('ma_l')[-2][1], scene.indicator('ma_l')[-1][1]]
 		
-		if len(scene.indicator('adx_m'))>0:
+		'''
+		持仓时,对adx,对一定的窗口宽度(short/2),若持续减弱,平仓
+		'''
+		width = int(math.ceil(st/2.0))
+		if w.goods>0.0 and len(scene.indicator('adx_m'))>=width:
+			buf = []
+			for i in range(width):
+				buf.append(scene.indicator('adx_m')[-width+i])
+			match_this_case = True
+			for i in range(len(buf)-1):
+				if buf[i]<buf[i+1]:
+					match_this_ase = False
+					break
+			if math_this_case:
+				w.sell(time[actual], scene[-1].close, w.goods)
+				return
+				
 			print 'adx at %s : %.2f' % \
 				(scene.indicator('adx_m').last[0], scene.indicator('adx_m').last[1])
 
 		'''
 		持仓时,若趋势强度趋势与获取走势背离,考虑平仓.
+		'''
 		'''
 		if w.goods>0.0:
 			last_buy_order = w.buy_order(-1)
@@ -64,6 +82,7 @@ def do_work(filename):
 				if_sell = wallet.SellOrder(time[actual], scene[-1].close, w.goods, w.sell_ratio)
 				ratio = (if_sell.owned-last_buy_order.paid)/(last_buy_order.paid)
 				print 'if sell at %s : %.2f%%' % (time[actual], ratio*100)
+		'''
 
 
 

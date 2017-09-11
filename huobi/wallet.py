@@ -97,6 +97,17 @@ class Wallet(object):
 		self.__orders = [] # 交易记录{order:BuyOrder/SellOrder, ratio:ratio}
 		self.__buy_order_idx = [] # 买单在缓存中索引集合
 		self.__sell_order_idx = [] # 卖单在缓存中索引集合
+		self.__trace = True
+
+		self.__user_data = {}
+
+	def add_usr_data(key, val):
+		self.__user_data[key] = val
+
+	def user_data(key):
+		if not self.__user_data.has_key(key):
+			return None
+		return self.__user_data[key]
 
 	@property
 	def buy_order_num(self):
@@ -175,31 +186,29 @@ class Wallet(object):
 		return self.__goods>=selled and self.__goods>0.0
 	
 	def buy(self, time, price, paid):
-		#print 'try to buy : %s %.2f %.2f' % (time, price, paid)
 		if not self.can_buy(paid):
-			#print 'try to buy but no fund'
 			return False
 		buy_order = BuyOrder(time, price, paid, self.__buy_ratio)
 		self.__fund_left -= buy_order.paid
 		self.__goods += buy_order.goods
 		self.__orders.append({'order':buy_order, 'ratio':self.profit_ratio(price)})
 		self.__buy_order_idx.append(len(self.__orders)-1)
-		print 'buy successed at %s : use %.2f with price %.2f to goods %.6f' % \
-			(time, paid, price, buy_order.goods)
+		if self.__trace:
+			print 'buy successed at %s : use %.2f with price %.2f to goods %.6f' % \
+				(time, paid, price, buy_order.goods)
 		return True
 
 	def sell(self, time, price, goods):
-		#print 'try to sell : %s %.2f %.2f' % (time, price, volume)
 		if not self.can_sell(goods):
-			#print 'try to sell but no goods'
 			return False
 		sell_order = SellOrder(time, price, goods, self.__sell_ratio)
 		self.__goods -= sell_order.goods
 		self.__fund_left += sell_order.owned
 		self.__orders.append({'order':sell_order, 'ratio':self.profit_ratio(price)})
 		self.__sell_order_idx.append(len(self.__orders)-1)
-		print 'sell successed at %s : use goods %.6f with price %.2f to own %.2f' % \
-			(time, goods, price, sell_order.owned)
+		if self.__trace:
+			print 'sell successed at %s : use goods %.6f with price %.2f to own %.2f' % \
+				(time, goods, price, sell_order.owned)
 		return True
 
 	def __str__(self):
